@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     const question = req.body?.question || "Hallo Coach";
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
