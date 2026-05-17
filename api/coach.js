@@ -60,9 +60,14 @@ export default async function handler(req, res) {
       answer: completion.choices[0].message.content,
     });
 
-  } catch (error) {
-    console.error("FULL ERROR:", error);
+ } catch (error) {
+  console.error("FULL ERROR:", error);
 
+  return res.status(500).json({
+    message: error.message,
+    full: JSON.stringify(error, null, 2),
+  });
+}
     return res.status(500).json({
       error: error.message || String(error),
     });
