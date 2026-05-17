@@ -56,15 +56,12 @@ export default async function handler(req, res) {
     });
 
     // Antwort senden
-    return res.status(200).json({
-      answer: completion.choices[0].message.content,
+     } catch (error) {
+    console.error("FULL ERROR:", error);
+
+    return res.status(500).json({
+      message: error.message,
+      full: JSON.stringify(error, null, 2),
     });
-
- } catch (error) {
-  console.error("FULL ERROR:", error);
-
-  return res.status(500).json({
-    message: error.message,
-    full: JSON.stringify(error, null, 2),
-  });
+  }
 }
