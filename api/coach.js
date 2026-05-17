@@ -5,14 +5,20 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
 
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Nur POST erlaubt" });
+    return res.status(405).json({
+      error: "Nur POST erlaubt",
+    });
   }
 
   if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({ error: "OPENAI_API_KEY fehlt" });
+    return res.status(500).json({
+      error: "OPENAI_API_KEY fehlt",
+    });
   }
 
   try {
@@ -20,7 +26,11 @@ export default async function handler(req, res) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body)
+        : req.body;
+
     const question = body?.question || "Hallo Coach";
 
     const completion = await openai.chat.completions.create({
@@ -29,7 +39,7 @@ export default async function handler(req, res) {
         {
           role: "system",
           content:
-            "Du bist ein motivierender Fitness-Coach für ein Paar. Ziel: Abnehmen und Muskelaufbau zuhause/im Freien. Gib sichere, rückenfreundliche Hinweise. Ersetze keinen Arzt oder Physiotherapeuten.",
+            "Du bist ein motivierender Fitness-Coach.",
         },
         {
           role: "user",
@@ -46,7 +56,6 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       error: error.message,
-      stack: error.stack,
     });
   }
 }
