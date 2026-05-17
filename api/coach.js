@@ -26,25 +26,14 @@ export default async function handler(req, res) {
       apiKey: process.env.OPENAI_API_KEY,
     });
 
-    const body =
-      typeof req.body === "string"
-        ? JSON.parse(req.body)
-        : req.body;
-
-    const body =
-  typeof req.body === "string"
-    ? JSON.parse(req.body)
-    : req.body;
-
-const question = body?.question || "Hallo Coach";
+    const question = req.body?.question || "Hallo Coach";
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
       messages: [
         {
           role: "system",
-          content:
-            "Du bist ein motivierender Fitness-Coach.",
+          content: "Du bist ein motivierender Fitness-Coach.",
         },
         {
           role: "user",
@@ -57,12 +46,10 @@ const question = body?.question || "Hallo Coach";
       answer: completion.choices[0].message.content,
     });
   } catch (error) {
-    console.error(error);
-
     console.error("FULL ERROR:", error);
 
-return res.status(500).json({
-  error: error.message || String(error),
-});
+    return res.status(500).json({
+      error: error.message || String(error),
+    });
   }
 }
