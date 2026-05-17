@@ -31,7 +31,12 @@ export default async function handler(req, res) {
         ? JSON.parse(req.body)
         : req.body;
 
-    const question = body?.question || "Hallo Coach";
+    const body =
+  typeof req.body === "string"
+    ? JSON.parse(req.body)
+    : req.body;
+
+const question = body?.question || "Hallo Coach";
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
