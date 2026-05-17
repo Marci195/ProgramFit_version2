@@ -68,8 +68,3 @@ export default async function handler(req, res) {
     full: JSON.stringify(error, null, 2),
   });
 }
-    return res.status(500).json({
-      error: error.message || String(error),
-    });
-  }
-}
