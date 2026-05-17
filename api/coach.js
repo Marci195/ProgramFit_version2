@@ -1,71 +1,70 @@
-const BACKEND_URL_KEY = "fitness_coach_backend_url";
+import OpenAI from "openai";
 
-function $(id) {
-  return document.getElementById(id);
-}
+export default async function handler(req, res) {
+  // CORS erlauben
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-document.addEventListener("DOMContentLoaded", () => {
-  const backendInput = $("coachBackendUrl");
-  const saveBtn = $("saveCoachUrl");
-  const askBtn = $("askCoachBtn");
-  const questionInput = $("coachQuestion");
-  const answerBox = $("coachAnswer");
-
-  const savedUrl =
-    localStorage.getItem(BACKEND_URL_KEY) ||
-    "https://program-fit-version2.vercel.app/api/coach";
-
-  if (backendInput) {
-    backendInput.value = savedUrl;
+  // OPTIONS Anfrage erlauben
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
 
-  if (saveBtn) {
-    saveBtn.addEventListener("click", () => {
-      const url = backendInput.value.trim();
-      localStorage.setItem(BACKEND_URL_KEY, url);
-      answerBox.textContent = "Backend-URL gespeichert.";
+  // Nur POST erlauben
+  if (req.method !== "POST") {
+    return res.status(405).json({
+      error: "Nur POST erlaubt",
     });
   }
 
-  if (askBtn) {
-    askBtn.addEventListener("click", frageCoach);
+  // Prüfen ob API Key vorhanden ist
+  if (!process.env.OPENAI_API_KEY) {
+    return res.status(500).json({
+      error: "OPENAI_API_KEY fehlt",
+    });
   }
 
-  async function frageCoach() {
-    const backendUrl = backendInput.value.trim();
-    const question = questionInput.value.trim() || "Hallo Coach";
+  try {
+    // OpenAI initialisieren
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
 
-    answerBox.textContent = "Coach denkt nach ...";
+    // Body lesen
+    const body =
+      typeof req.body === "string"
+        ? JSON.parse(req.body)
+        : req.body;
 
-    try {
-      const response = await fetch(backendUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+    const question = body?.question || "Hallo Coach";
+
+    // OpenAI Anfrage
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Du bist ein motivierender Fitness-Coach für Paare. Antworte kurz, motivierend und rückenfreundlich.",
         },
-        body: JSON.stringify({
-          question: question,
-        }),
-      });
+        {
+          role: "user",
+          content: question,
+        },
+      ],
+    });
 
-      const data = await response.json();
+    // Antwort senden
+    return res.status(200).json({
+      answer: completion.choices[0].message.content,
+    });
 
-      if (!response.ok) {
-        answerBox.textContent =
-          "Fehler: " + (data.error || "Unbekannter Serverfehler");
-        return;
-      }
+  } catch (error) {
+    console.error("FULL ERROR:", error);
 
-      answerBox.textContent = data.answer || "Keine Antwort erhalten.";
-    } catch (error) {
-      answerBox.textContent = "Fehler: " + error.message;
-    }
+    return res.status(500).json({
+      error: error.message || String(error),
+    });
   }
-
-  window.coachQuickQuestion = function (text) {
-    if (questionInput) {
-      questionInput.value = text;
-    }
-    frageCoach();
-  };
-});
+}
