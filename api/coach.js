@@ -41,17 +41,12 @@ export default async function handler(req, res) {
     return res.status(200).json({
       answer: completion.choices[0].message.content,
     });
- } catch (error) {
-  console.error(error);
+  } catch (error) {
+    console.error(error);
 
-  return res.status(500).json({
-    error: error.message,
-    stack: error.stack
-  });
-}
-
-return res.status(500).json({
-  error: String(error),
-});
+    return res.status(500).json({
+      error: error.message,
+      stack: error.stack,
+    });
   }
 }
