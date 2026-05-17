@@ -1,67 +1,37 @@
-import OpenAI from "openai";
+async function frageCoach() {
+  const frage = document.getElementById("questionInput").value;
+  const antwortBox = document.getElementById("coachAnswer");
 
-export default async function handler(req, res) {
-  // CORS erlauben
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
-  // OPTIONS Anfrage erlauben
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  // Nur POST erlauben
-  if (req.method !== "POST") {
-    return res.status(405).json({
-      error: "Nur POST erlaubt",
-    });
-  }
-
-  // Prüfen ob API Key vorhanden ist
-  if (!process.env.OPENAI_API_KEY) {
-    return res.status(500).json({
-      error: "OPENAI_API_KEY fehlt",
-    });
-  }
+  antwortBox.innerText = "Coach denkt kurz nach ...";
 
   try {
-    // OpenAI initialisieren
-    const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-
-    // Body lesen
-    const body =
-      typeof req.body === "string"
-        ? JSON.parse(req.body)
-        : req.body;
-
-    const question = body?.question || "Hallo Coach";
-
-    // OpenAI Anfrage
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Du bist ein motivierender Fitness-Coach für Paare. Antworte kurz, motivierend und rückenfreundlich.",
+    const response = await fetch(
+      "https://program-fit-version2.vercel.app/api/coach",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          role: "user",
-          content: question,
-        },
-      ],
-    });
+        body: JSON.stringify({
+          question: frage,
+        }),
+      }
+    );
 
-    // Antwort senden
-     } catch (error) {
-    console.error("FULL ERROR:", error);
+    const data = await response.json();
 
-    return res.status(500).json({
-      message: error.message,
-      full: JSON.stringify(error, null, 2),
-    });
+    console.log(data);
+
+    if (data.answer) {
+      antwortBox.innerText = data.answer;
+    } else {
+      antwortBox.innerText =
+        "Fehler: " + (data.error || "Unbekannter Fehler");
+    }
+  } catch (error) {
+    console.error(error);
+
+    antwortBox.innerText =
+      "Fehler beim KI-Coach: " + error.message;
   }
 }
